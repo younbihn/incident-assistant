@@ -1,4 +1,4 @@
-# 장애 대응 도우미 (Incident Assistant)
+# OpsLens (Incident Assistant)
 
 > **합성 로그로 만든 데모입니다. 실제 운영 로그, 서버명, 기관 정보, 내부 매뉴얼은 코드에도 LLM API에도 사용하지 않았습니다.**
 
