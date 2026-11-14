@@ -216,12 +216,12 @@ if __name__ == "__main__":
     pred = detect_by_model(agg)
 
     incidents = group_incidents(agg, pred)
-    print(f"탐지된 사건 {len(incidents)}건 (백엔드: {LLM_BACKEND})\n")
+    targets = [i for i in incidents if i.duration_min >= MIN_DURATION_MIN]
+    print(f"탐지 구간 {len(incidents)}개 중 {MIN_DURATION_MIN}분 이상 {len(targets)}건을 요약합니다 "
+          f"(나머지는 짧은 잡음, 백엔드: {LLM_BACKEND})\n")
 
     passed = 0
-    for inc in incidents:
-        if inc.duration_min < MIN_DURATION_MIN:
-            continue
+    for inc in targets:
         logs = pick_context_logs(df, inc)
         prompt, numbered = build_prompt(inc, logs)
         answer = call_llm(prompt)
