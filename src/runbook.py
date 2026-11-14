@@ -11,6 +11,7 @@ import json
 import re
 from pathlib import Path
 
+import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -62,7 +63,10 @@ class RunbookIndex:
     def search(self, query: str, k: int = TOP_K) -> list[dict]:
         qv = self.vectorizer.transform([query])
         scores = cosine_similarity(qv, self.matrix)[0]
-        ranked = scores.argsort()[::-1][:k]
+        # 점수가 같은 조각이 많아 정렬 방식에 따라 순서가 달라지므로 안정 정렬을 쓴다.
+        # 0점(질의와 겹치는 단어가 전혀 없음)은 검색 결과로 치지 않는다.
+        # 0점끼리의 순서는 의미가 없어서, 포함하면 우연히 맞은 것이 성공으로 센다.
+        ranked = [i for i in np.argsort(-scores, kind="stable")[:k] if scores[i] > 0]
         return [{**self.chunks[i], "score": float(scores[i])} for i in ranked]
 
 
@@ -116,7 +120,7 @@ def evaluate(index: RunbookIndex, ks=(1, 3)) -> dict:
             if gold in got:
                 hit += 1
             else:
-                misses.append((query, gold, got[0]))
+                misses.append((query, gold, got[0] if got else "결과없음"))
         result[k] = {"recall": hit / len(EVAL_SET), "hit": hit,
                      "total": len(EVAL_SET), "misses": misses}
     return result
